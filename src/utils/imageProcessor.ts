@@ -3,6 +3,7 @@ export interface ProcessingOptions {
   height: number;
   quality: number;
   lossless: boolean;
+  outputFormat: 'webp' | 'png' | 'jpeg';
 }
 
 export const processImage = async (
@@ -30,9 +31,11 @@ export const processImage = async (
         canvas.width = options.width;
         canvas.height = options.height;
         
-        // Fill with white background
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, options.width, options.height);
+        // Fill with white background for JPEG format (which doesn't support transparency)
+        if (options.outputFormat === 'jpeg') {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, options.width, options.height);
+        }
         
         // Calculate scaling to maintain aspect ratio (fit: contain)
         const scale = Math.min(
@@ -50,7 +53,8 @@ export const processImage = async (
         // Draw the resized image
         ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
         
-        // Convert to WebP blob
+        // Convert to selected format
+        const mimeType = `image/${options.outputFormat}`;
         const qualityValue = options.lossless ? 1.0 : options.quality / 100;
         
         canvas.toBlob(
@@ -58,10 +62,10 @@ export const processImage = async (
             if (blob) {
               resolve(blob);
             } else {
-              reject(new Error('Failed to convert canvas to blob'));
+              reject(new Error(`Failed to convert canvas to ${options.outputFormat}`));
             }
           },
-          'image/webp',
+          mimeType,
           qualityValue
         );
         
@@ -78,4 +82,33 @@ export const processImage = async (
     // Load the image
     img.src = url;
   });
+};
+
+// Helper function to get file extension from MIME type
+export const getFileExtension = (mimeType: string): string => {
+  switch (mimeType) {
+    case 'image/webp':
+      return '.webp';
+    case 'image/png':
+      return '.png';
+    case 'image/jpeg':
+      return '.jpg';
+    default:
+      return '.webp';
+  }
+};
+
+// Helper function to check if file is a supported image format
+export const isSupportedImageFormat = (file: File): boolean => {
+  const supportedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/bmp'
+  ];
+  
+  return supportedTypes.includes(file.type) || 
+         file.name.toLowerCase().match(/\.(jpg|jpeg|png|webp|gif|bmp)$/);
 };

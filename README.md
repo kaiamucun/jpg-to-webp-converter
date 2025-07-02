@@ -1,6 +1,16 @@
-# JPG to WebP Converter
+# Universal Image Converter
 
-これは[Next.js](https://nextjs.org)を使って作られたJPGからWebPへの変換アプリケーションです。
+これは[Next.js](https://nextjs.org)を使って作られた汎用画像変換アプリケーションです。JPG、PNG、WebP、GIF、BMP形式の相互変換とリサイズが可能です。
+
+## ✨ 機能
+
+- **多形式対応**: JPG, PNG, WebP, GIF, BMP の入力をサポート
+- **柔軟な出力**: WebP, PNG, JPEG 形式での出力
+- **双方向変換**: WebP ↔ PNG, WebP ↔ JPEG, PNG ↔ JPEG など
+- **バッチ処理**: 複数ファイルの一括変換
+- **リサイズ機能**: 指定サイズへの画像リサイズ
+- **品質調整**: ロスレス/ロッシー圧縮の選択
+- **ローカル処理**: ブラウザ内で完結、プライバシー保護
 
 ## 🚀 簡単な起動方法
 
@@ -34,6 +44,23 @@ bun dev
 ```
 
 その後、ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
+
+## 📝 使用方法
+
+1. **ファイル選択**: ドラッグ&ドロップまたはクリックで画像ファイルを選択
+2. **設定調整**: 
+   - 出力形式を選択（WebP、PNG、JPEG）
+   - サイズを指定（幅・高さ）
+   - 品質を調整（PNG以外）
+3. **変換実行**: "Convert All" ボタンで一括変換
+4. **ダウンロード**: ZIP形式で変換済み画像を一括ダウンロード
+
+## 🎛️ 設定オプション
+
+- **Output Format**: 出力形式（WebP/PNG/JPEG）
+- **Width/Height**: 出力画像のサイズ（16-4096px）
+- **Quality**: 圧縮品質（0-100、PNG以外）
+- **Lossless**: ロスレス圧縮（PNGは常時ON）
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

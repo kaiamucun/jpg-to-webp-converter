@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Upload, Download, Undo2, Settings } from 'lucide-react';
 import JSZip from 'jszip';
-import { processImage, ProcessingOptions } from '@/utils/imageProcessor';
+import { processImage, ProcessingOptions, getFileExtension, isSupportedImageFormat } from '@/utils/imageProcessor';
 
 interface FileItem {
   id: string;
@@ -20,6 +20,7 @@ interface ConversionSettings {
   height: number;
   quality: number;
   lossless: boolean;
+  outputFormat: 'webp' | 'png' | 'jpeg';
 }
 
 export default function Home() {
@@ -29,6 +30,7 @@ export default function Home() {
     height: 200,
     quality: 80,
     lossless: false,
+    outputFormat: 'webp',
   });
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,9 +51,7 @@ export default function Home() {
     e.preventDefault();
     setIsDragging(false);
     
-    const droppedFiles = Array.from(e.dataTransfer.files).filter(
-      file => file.type === 'image/jpeg' || file.name.toLowerCase().endsWith('.jpg')
-    );
+    const droppedFiles = Array.from(e.dataTransfer.files).filter(isSupportedImageFormat);
     
     addFiles(droppedFiles);
   }, []);
@@ -86,6 +86,7 @@ export default function Home() {
       height: settings.height,
       quality: settings.quality,
       lossless: settings.lossless,
+      outputFormat: settings.outputFormat,
     };
     
     for (let i = 0; i < pendingFiles.length; i++) {
@@ -135,7 +136,8 @@ export default function Home() {
     
     completedFiles.forEach(fileItem => {
       const originalName = fileItem.file.name.replace(/\.[^/.]+$/, '');
-      const fileName = `${originalName}_${settings.width}x${settings.height}.webp`;
+      const extension = getFileExtension(`image/${settings.outputFormat}`);
+      const fileName = `${originalName}_${settings.width}x${settings.height}${extension}`;
       zip.file(fileName, fileItem.processedBlob!);
     });
     
@@ -143,7 +145,7 @@ export default function Home() {
     const url = URL.createObjectURL(zipBlob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'converted-images.zip';
+    a.download = `converted-images-${settings.outputFormat}.zip`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -171,10 +173,10 @@ export default function Home() {
       <div className="max-w-6xl mx-auto">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            JPG → WebP Converter
+            Universal Image Converter
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Convert and resize JPG images to WebP format locally in your browser
+            Convert between JPG, PNG, WebP formats and resize images locally in your browser
           </p>
         </header>
 
@@ -188,6 +190,20 @@ export default function Home() {
               </div>
               
               <div className="space-y-4">
+                {/* Output Format Selection */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Output Format</label>
+                  <select
+                    value={settings.outputFormat}
+                    onChange={(e) => setSettings(prev => ({ ...prev, outputFormat: e.target.value as 'webp' | 'png' | 'jpeg' }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
+                  >
+                    <option value="webp">WebP</option>
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-sm font-medium mb-1">Width (px)</label>
@@ -197,7 +213,7 @@ export default function Home() {
                       max="4096"
                       value={settings.width}
                       onChange={(e) => setSettings(prev => ({ ...prev, width: parseInt(e.target.value) }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
                     />
                   </div>
                   <div>
@@ -208,7 +224,7 @@ export default function Home() {
                       max="4096"
                       value={settings.height}
                       onChange={(e) => setSettings(prev => ({ ...prev, height: parseInt(e.target.value) }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
                     />
                   </div>
                 </div>
@@ -223,20 +239,27 @@ export default function Home() {
                     max="100"
                     value={settings.quality}
                     onChange={(e) => setSettings(prev => ({ ...prev, quality: parseInt(e.target.value) }))}
-                    disabled={settings.lossless}
+                    disabled={settings.lossless || settings.outputFormat === 'png'}
                     className="w-full"
                   />
+                  {settings.outputFormat === 'png' && (
+                    <p className="text-xs text-gray-500 mt-1">PNG is always lossless</p>
+                  )}
                 </div>
                 
                 <div className="flex items-center">
                   <input
                     type="checkbox"
                     id="lossless"
-                    checked={settings.lossless}
+                    checked={settings.lossless || settings.outputFormat === 'png'}
                     onChange={(e) => setSettings(prev => ({ ...prev, lossless: e.target.checked }))}
+                    disabled={settings.outputFormat === 'png'}
                     className="mr-2"
                   />
-                  <label htmlFor="lossless" className="text-sm">Lossless compression</label>
+                  <label htmlFor="lossless" className="text-sm">
+                    Lossless compression
+                    {settings.outputFormat === 'png' && <span className="text-gray-500"> (forced for PNG)</span>}
+                  </label>
                 </div>
               </div>
             </div>
@@ -256,13 +279,13 @@ export default function Home() {
               onDrop={handleDrop}
             >
               <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-lg mb-2">Drop JPG files here or click to select</p>
-              <p className="text-sm text-gray-500 mb-4">Supports multiple file selection</p>
+              <p className="text-lg mb-2">Drop image files here or click to select</p>
+              <p className="text-sm text-gray-500 mb-4">Supports JPG, PNG, WebP, GIF, BMP formats</p>
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept="image/jpeg,.jpg"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp"
                 onChange={handleFileSelect}
                 className="hidden"
               />
