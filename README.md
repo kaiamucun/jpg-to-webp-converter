@@ -1,8 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JPG to WebP Converter
 
-## Getting Started
+これは[Next.js](https://nextjs.org)を使って作られたJPGからWebPへの変換アプリケーションです。
 
-First, run the development server:
+## 🚀 簡単な起動方法
+
+### 自動起動（推奨）
+ブラウザが自動で開かれる簡単な起動方法です：
+
+```bash
+# シェルスクリプトを使用（macOS/Linux）
+./start.sh
+
+# またはNode.jsスクリプトを使用（全OS対応）
+node start.js
+
+# またはnpmコマンドを使用
+npm run start:auto
+# または
+npm run dev:open
+```
+
+### 通常の起動方法
+開発サーバーのみを起動する場合：
 
 ```bash
 npm run dev
@@ -14,7 +33,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+その後、ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
